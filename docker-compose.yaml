@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 services:
   web:
@@ -10,6 +10,7 @@ services:
     restart: always
     depends_on:
       - db
+
   db:
     image: postgres:3.14-alpine
     container_name: db
@@ -19,6 +20,6 @@ services:
     ports:
       - "5432:5432"
     environment:
-      POSTGRES_USER: pguser
-      POSTGRES_PASSWORD: pguser
-      POSTGRES_DB: jack_bot
+      POSTGRES_USER: telegrammodbot_user
+      POSTGRES_PASSWORD: b0yP1EP75Od6OyrF3vNQOxmzEcFnlV8I
+      POSTGRES_DB: telegrammodbot

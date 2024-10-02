@@ -1,119 +1,128 @@
-import { Context, Middleware, Scenes, session } from 'telegraf';   
-import { createAddWizard } from '../utils/addWizard';
-import { createDelWizard } from '../utils/delWizard';
-import { bot } from '../bot/bot'
-import { Update } from 'typegram';
-import {prisma} from '../db/prisma'
-import { removeMessages } from '../db/messageController';
-import { messageCheck } from '../utils/sender';
-import { SceneContextScene } from 'telegraf/typings/scenes';
-import { createUpdateWizard } from '../utils/updateWizard';
+import { Context, Middleware, Scenes, session } from "telegraf";
+import { createAddWizard } from "../utils/addWizard";
+import { createDelWizard } from "../utils/delWizard";
+import { bot } from "../bot/bot";
+import { Update } from "typegram";
+import { prisma } from "../db/prisma";
+import { removeMessages } from "../db/messageController";
+import { messageCheck } from "../utils/sender";
+import { SceneContextScene } from "telegraf/typings/scenes";
+import { createUpdateWizard } from "../utils/updateWizard";
 
 const stage = new Scenes.Stage([
-    createAddWizard("ADD", (ctx: Scenes.WizardContext) => { console.log(ctx.session) }),
-    createDelWizard("DEL", (ctx: Scenes.WizardContext) => { console.log(ctx.session) }),
-    createUpdateWizard("UPT", (ctx: Scenes.WizardContext)=> { console.log(ctx.session) })
+  createAddWizard("ADD", (ctx: Scenes.WizardContext) => {
+    console.log(ctx.session);
+  }),
+  createDelWizard("DEL", (ctx: Scenes.WizardContext) => {
+    console.log(ctx.session);
+  }),
+  createUpdateWizard("UPT", (ctx: Scenes.WizardContext) => {
+    console.log(ctx.session);
+  }),
 ]);
 
 const commands = [
-    { command: 'comandos', description: 'Lista os Comandos'},
-    { command: "add", description: "Adiciona uma nova mensagem"},
-    { command: "register", description: "Registra o chat para o bot enviar mensagens"},
-    { command: "clear", description: "Limpar todas as mensagens"},
-    { command: "del", description: "Deleta uma única mensagem"},
-    { command: "update", description: "Atualiza uma mensagem selecionada"}
+  { command: "komutlar", description: "Komutları Listeler" },
+  { command: "ekle", description: "Yeni bir mesaj ekler" },
+  {
+    command: "kayit",
+    description: "Botun mesaj göndermesi için sohbeti kaydeder",
+  },
+  { command: "temizle", description: "Tüm mesajları temizler" },
+  { command: "sil", description: "Tek bir mesajı siler" },
+  { command: "guncelle", description: "Seçilen mesajı günceller" },
 ];
 
-interface ChatContext{
-    chat: {
-        id: number
-        title?: string
-    }
-};
+interface ChatContext {
+  chat: {
+    id: number;
+    title?: string;
+  };
+}
 
 const wait = async (ms: number) => {
-    await new Promise(r => setTimeout(r,ms));
+  await new Promise((r) => setTimeout(r, ms));
 };
 
-async function is_adm( ctx: Context ){
-    let adms = await ctx.getChatAdministrators().catch(err => []);
-    return adms.find(adm => ctx.from?.id === adm.user.id);
-};
+async function is_adm(ctx: Context) {
+  let adms = await ctx.getChatAdministrators().catch((err) => []);
+  return adms.find((adm) => ctx.from?.id === adm.user.id);
+}
 
-async function setup(){
-    bot.start(ctx => {
-        ctx.reply("Olá eu sou Jack. Sou um bot que agenda e envia mensagens. Envie /comandos para iniciar");
-    });
+async function setup() {
+  bot.start((ctx) => {
+    ctx.reply(
+      "Merhaba, ben Jack. Mesajları planlayıp gönderen bir botum. Başlamak için /komutlar yazın."
+    );
+  });
 
-    bot.telegram.setMyCommands(commands);
+  bot.telegram.setMyCommands(commands);
 
-    bot.command('comandos', ctx=> {
-        let message: string = "";
-        bot.telegram.getMyCommands().then( commands => {
-            commands.forEach((command, i) => {
-            message += i + " - /" + command.command + ": " + command.description + "\n";
-            });
-            ctx.reply(message).catch(err=>{
-                wait(err.response.parameters.retry_after*1001);
-            })
-        }).catch(err => {
-            console.log("Error listing commands: " + err);
+  bot.command("komutlar", (ctx) => {
+    let message: string = "";
+    bot.telegram
+      .getMyCommands()
+      .then((commands) => {
+        commands.forEach((command, i) => {
+          message +=
+            i + " - /" + command.command + ": " + command.description + "\n";
         });
-    });
+        ctx.reply(message).catch((err) => {
+          wait(err.response.parameters.retry_after * 1001);
+        });
+      })
+      .catch((err) => {
+        console.log("Komutları listeleme hatası: " + err);
+      });
+  });
 
-    //bot.on('photo', ctx=>{
-    //    console.log(ctx.message);
-    //    console.log(ctx.message.photo[-1]);
-    //    ctx.telegram.sendPhoto(ctx.chat.id, ctx.message?.photo[0].file_id, {caption: ctx.message?.caption})
-    //}).catch(err => console.log(err));
+  bot.command("kayit", async (ctx: Context & ChatContext) => {
+    const result = await is_adm(ctx);
+    if (result) {
+      const chatExist = await prisma.chat.findFirst({
+        where: {
+          chatid: ctx.chat.id,
+        },
+      });
 
-    bot.command("register", async (ctx: (Context<Update> & ChatContext)) => {
-        const result = await is_adm(ctx);
-        if(result){
-            const chatExist = await prisma.chat.findFirst({
-                where:{
-                    chatid: ctx.chat.id
-                }
-            });
+      if (!chatExist) {
+        const createChat = await prisma.chat.create({
+          data: {
+            chatid: ctx.chat.id,
+            title: ctx.chat?.title || "İsimsiz",
+          },
+        });
+        ctx.reply(
+          `Sohbet ${ctx.chat.title} (id: ${ctx.chat.id}) başarıyla kaydedildi.`
+        );
+      } else {
+        ctx.reply(
+          `Sohbet ${ctx.chat.title} (id: ${ctx.chat.id}) zaten kaydedildi.`
+        );
+      }
+    }
+  });
 
-            if(!chatExist){
-                const createChat = await prisma.chat.create({
-                    data:{
-                        chatid: ctx.chat.id,
-                        title: ctx.chat?.title || "NoName"
-                    }
-                });
-                ctx.reply(`Chat ${ctx.chat.title} (id: ${ctx.chat.id}) registrado com sucesso`);
-            } else {
-                ctx.reply(`Chat ${ctx.chat.title} (id: ${ctx.chat.id}) já registrado.`);
-            }
+  messageCheck();
+  bot.command("temizle", async (ctx) => {
+    if (ctx.message.chat.type.match(/group|supergroup/)) {
+      const isadm = await is_adm(ctx);
+      if (isadm) removeMessages();
+      else ctx.reply("Sadece yöneticiler bu komutu kullanabilir");
+    }
+  });
 
-        }
-    })
-
-    messageCheck();
-    bot.command("clear", async ctx => {
-        if(ctx.message.chat.type.match(/group|supergroup/)){
-            const isadm = await is_adm(ctx);
-            if(isadm)        
-                removeMessages();
-            else
-                ctx.reply("Somente administradores podem usar comandos");
-            
-        }
-    });
-
-    bot.use(session());
-    bot.use(stage.middleware());
-    // addStage.hears("❌ Exit", ctx => ctx.scene.leave());
-    bot.command('add', ctx => ctx.scene.enter("ADD") );
-    bot.command('del', ctx => ctx.scene.enter("DEL") );
-    bot.command('update', ctx => ctx.scene.enter("UPT") );
+  bot.use(session());
+  bot.use(stage.middleware());
+  // addStage.hears("❌ Çıkış", ctx => ctx.scene.leave());
+  bot.command("ekle", (ctx) => ctx.scene.enter("ADD"));
+  bot.command("sil", (ctx) => ctx.scene.enter("DEL"));
+  bot.command("guncelle", (ctx) => ctx.scene.enter("UPT"));
 }
 
-function launch(){
-    console.log("Launching Bot");
-    bot.launch();
+function launch() {
+  console.log("Bot Başlatılıyor");
+  bot.launch();
 }
 
-export default {setup, launch};
+export default { setup, launch };
