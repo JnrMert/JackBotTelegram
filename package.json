@@ -12,6 +12,9 @@
     "@prisma/client": "^3.0.0",
     "ts-node-dev": "^1.0.0"
   },
+  "devDependencies": {
+    "typescript": "^4.0.0"
+  },
   "engines": {
     "node": "18.x"
   }
