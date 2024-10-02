@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "main": "src/index.js", 
   "scripts": {
-    "start": "node src/index.js"
-  },
+  "start": "ts-node-dev src/index.ts"
+}
   "dependencies": {
     "telegraf": "^4.4.1",
     "prisma": "^3.0.0", 
