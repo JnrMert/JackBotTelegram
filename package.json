@@ -22,6 +22,7 @@
     "typescript": "^4.4.2"
   },
   "engines": {
-    "node": ">=14"
+    "node": "18.x",
+    "npm": ">=10.x"
   }
 }
