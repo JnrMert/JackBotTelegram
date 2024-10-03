@@ -3,6 +3,10 @@
   "version": "1.0.0",
   "description": "Jack is a Telegram Bot developed using Typescript. His purpose is to provide an enviroment to store messages (announcements, reminders, etc) and broadcast them among registered groups.",
   "main": "index.js",
+  "engines": {
+    "node": "18.x",
+    "npm": "8.x"
+  },
   "dependencies": {
     "@prisma/client": "^5.20.0",
     "acorn": "^8.12.1",
