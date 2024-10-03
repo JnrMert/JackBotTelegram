@@ -19,4 +19,4 @@ npm -i
 npx prisma migrate deploy
 
 # Run the application
-npx ts-node-dev ../src/index.ts
+npx ts-node-dev src/index.ts
