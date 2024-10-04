@@ -33,9 +33,38 @@ export const createAddWizard = composeWizardScene(
     // console.log(ctx.message);
     if (ctx.message.text == "🛑 Çıkış") return done();
     if (ctx.updateType == "message") {
+      // 1. Mesajı kaydetme adımı (var olan kod)
       if (ctx.message.text) {
         ctx.wizard.state.caption = ctx.message.text;
         ctx.wizard.state.type = "text";
+        const buttonRegex = /\[👉 ([^\]]+)\]\(buttonurl:\/\/([^)\s]+)\)/g;
+        let match;
+        const buttons = [];
+
+        // 2. buttonurl formatını yakala ve butonlara dönüştür
+        while ((match = buttonRegex.exec(ctx.wizard.state.caption)) !== null) {
+          const [_, buttonText, buttonUrl] = match;
+          buttons.push({ text: buttonText, url: buttonUrl });
+        }
+
+        // 3. Eğer butonlar varsa caption ile birlikte inline buton gönder
+        if (buttons.length > 0) {
+          ctx.reply("Otomatik Mesaj İçeriği:", {
+            reply_markup: {
+              inline_keyboard: buttons.map((button) => [
+                { text: button.text, url: button.url },
+              ]),
+            },
+          });
+          // 4. Mesajın içinde buton linklerini temizleyin
+          ctx.wizard.state.caption = ctx.wizard.state.caption.replace(
+            buttonRegex,
+            ""
+          );
+        } else {
+          // Eğer buton yoksa normal şekilde mesajı göster
+          ctx.reply(ctx.wizard.state.caption);
+        }
       } else if (ctx.message.photo) {
         ctx.wizard.state.caption = ctx.message.caption;
         ctx.wizard.state.file_id =
