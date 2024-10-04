@@ -49,9 +49,11 @@ export const createAddWizard = composeWizardScene(
           if (buttons.length > 0) {
             ctx.reply('Otomatik Mesaj İçeriği:', {
               reply_markup: {
-              inline_keyboard: buttons.map(button => [{ text: button.text, url: button.url }])
-      }
-    });
+                inline_keyboard: buttons.map(button => [{ text: button.text, url: button.url }])
+              }
+            });
+            return;
+            
   }
 }
       } else if (ctx.message.photo) {
