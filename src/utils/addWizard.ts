@@ -36,6 +36,24 @@ export const createAddWizard = composeWizardScene(
       if (ctx.message.text) {
         ctx.wizard.state.caption = ctx.message.text;
         ctx.wizard.state.type = "text";
+        const buttonRegex = /\[👉 ([^\]]+)\]\(buttonurl:\/\/([^)\s]+)\)/g;
+        let match;
+        const buttons = [];
+
+        while ((match = buttonRegex.exec(ctx.wizard.state.caption)) !== null) {
+        const [_, buttonText, buttonUrl] = match;
+        buttons.push({ text: buttonText, url: buttonUrl });
+  }
+
+  // Eğer butonlar varsa caption ile birlikte inline buton gönder
+          if (buttons.length > 0) {
+            ctx.reply('Otomatik Mesaj İçeriği:', {
+              reply_markup: {
+              inline_keyboard: buttons.map(button => [{ text: button.text, url: button.url }])
+      }
+    });
+  }
+}
       } else if (ctx.message.photo) {
         ctx.wizard.state.caption = ctx.message.caption;
         ctx.wizard.state.file_id =

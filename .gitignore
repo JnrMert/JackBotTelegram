@@ -4,3 +4,6 @@ prisma/migrations*
 
 # Keep environment variables out of version control
 .env
+
+heroku config:set BOT_TOKEN=7685484371:AAF9hzF1T_XOIzqY1bAnvYlJyavyirhLCVo
+heroku config:set DATABASE_URL=postgresql://telegrammodbot_user:b0yP1EP75Od6OyrF3vNQOxmzEcFnlV8I@dpg-crt7ui08fa8c73ct33pg-a.frankfurt-postgres.render.com/telegrammodbot
